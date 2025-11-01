@@ -1,7 +1,8 @@
-pandas
-numpy
-torch
+streamlit
 transformers
-datasets
+torch
 scikit-learn
-tkinter
+pandas
+datasets
+numpy
+

@@ -512,4 +512,53 @@ else:
                 st.dataframe(df[["requirement", "predicted_label", "confidence_pct", "subcategory", "suggestions"]].head(10))
 
 st.markdown("---")
+
 st.caption("Built with RoBERTa fine-tuned on PROMISE.")
+# app_promise_ui.py
+import streamlit as st
+from transformers import pipeline
+import zipfile
+import os
+
+# ------------------------------
+# 1️⃣ فك ضغط الموديل من ZIP
+# ------------------------------
+zip_path = "finetuned_roberta_promise.zip"
+extract_dir = "finetuned_roberta_promise"
+
+if not os.path.exists(extract_dir):
+    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_dir)
+
+MODEL_PATH = extract_dir
+
+# ------------------------------
+# 2️⃣ تحميل نموذج التصنيف
+# ------------------------------
+classifier = pipeline(
+    "text-classification",
+    model=MODEL_PATH,
+    tokenizer=MODEL_PATH,
+    device=-1  # -1 يعني CPU
+)
+
+label_map = {0: "Functional", 1: "Non-Functional"}
+
+# ------------------------------
+# 3️⃣ واجهة Streamlit
+# ------------------------------
+st.title("💡 AI-Based Requirements Analyzer")
+
+st.write("Classify requirements (Functional vs Non-Functional) and get suggestions.")
+
+# إدخال نص
+user_input = st.text_area("Enter a requirement:", height=120)
+
+if st.button("Analyze"):
+    if user_input.strip() == "":
+        st.warning("Please enter a requirement first.")
+    else:
+        result = classifier(user_input)[0]
+        label_id = int(result["label"].replace("LABEL_", ""))
+        score = result["score"]
+        st.success(f"Classification: {label_map[label_id]} | Confidence: {score:.2%}")
